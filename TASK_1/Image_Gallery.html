@@ -1,1 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Gallery</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #6a11cb, #2575fc);
+            color: white;
+            user-select: none;
+            overflow-x: hidden;
+        }
 
+        .sidebar {
+            width: 250px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 20px;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            overflow-y: auto;
+            backdrop-filter: blur(10px);
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .sidebar h2 {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #ff9f43;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .sidebar ul li {
+            padding: 12px;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            text-align: center;
+            transition: 0.3s;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+
+        .sidebar ul li:hover, .sidebar ul li.active {
+            background: #ff9f43;
+            color: #000;
+            transform: translateX(10px);
+        }
+
+        .gallery-container {
+            margin-left: 270px;
+            padding: 20px;
+            text-align: center;
+            width: calc(100% - 270px);
+        }
+
+        .gallery {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .gallery img {
+            width: 220px;
+            height: 160px;
+            object-fit: cover;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease;
+            opacity: 0;
+            animation: fadeIn 0.6s ease-in-out forwards;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .gallery img:hover {
+            transform: scale(1.08);
+            box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.3);
+            border-color: #ff9f43;
+        }
+
+        .lightbox {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 1000;
+        }
+
+        .lightbox img {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 10px;
+            box-shadow: 0px 0px 30px rgba(255, 159, 67, 0.6);
+            animation: zoomIn 0.5s ease-in-out;
+        }
+
+        .close-btn, .prev-btn, .next-btn {
+            position: absolute;
+            font-size: 40px;
+            color: white;
+            cursor: pointer;
+            transition: 0.3s;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 50%;
+            padding: 10px;
+        }
+
+        .close-btn {
+            top: 20px;
+            right: 30px;
+        }
+
+        .prev-btn, .next-btn {
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .prev-btn {
+            left: 30px;
+        }
+
+        .next-btn {
+            right: 30px;
+        }
+
+        .close-btn:hover, .prev-btn:hover, .next-btn:hover {
+            color: #ff9f43;
+            transform: scale(1.1);
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes zoomIn {
+            from {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Media Queries for Responsiveness */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 200px;
+            }
+
+            .gallery-container {
+                margin-left: 220px;
+                width: calc(100% - 220px);
+            }
+
+            .gallery img {
+                width: 180px;
+                height: 130px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 180px;
+            }
+
+            .gallery-container {
+                margin-left: 200px;
+                width: calc(100% - 200px);
+            }
+
+            .gallery img {
+                width: 150px;
+                height: 110px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            body {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+                padding: 10px;
+            }
+
+            .gallery-container {
+                margin-left: 0;
+                width: 100%;
+            }
+
+            .gallery img {
+                width: 100%;
+                height: auto;
+                max-width: 200px;
+            }
+
+            .close-btn, .prev-btn, .next-btn {
+                font-size: 25px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .gallery img {
+                width: 100%;
+                height: auto;
+                max-width: 160px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <h2>Gallery Menu</h2>
+        <ul>
+            <li data-category="butterfly" class="active">Butterfly</li>
+            <li data-category="animals">Animals</li>
+            <li data-category="nature">Nature</li>
+            <li data-category="sky">Sky</li>
+            <li data-category="all">Show All</li>
+        </ul>
+    </div>
+
+    <div class="gallery-container">
+        <h1>Image Gallery</h1>
+        <div class="gallery">
+            <!-- Butterfly Images -->
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQzzX-GVU9NGtFRSbm_VvCCml-MmnSJW0kuwQ&s" alt="Butterfly 1" class="gallery-item" data-category="butterfly">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTM7putcslnzuYx7w7N7pzs3dHRzNu1Z2lPJg&s" alt="Butterfly 2" class="gallery-item" data-category="butterfly">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSknueQM2cavZ4ZG3rTqg9ZfjZ9x2nLS1bcDg&s" alt="Butterfly 3" class="gallery-item" data-category="butterfly">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQkw93LjIQgObWzO8tim2pK8u-fltvSBl7ufg&s" alt="Butterfly 4" class="gallery-item" data-category="butterfly">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTQkgn4GlOjYSpjOsH0XvBvAxzWcJKFrav28Q&s" alt="Butterfly 5" class="gallery-item" data-category="butterfly">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTStN6LIagmXwczCKh66Cjw4WPlOTCRACdCpg&s" alt="Butterfly 6" class="gallery-item" data-category="butterfly">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRCYvdXs8bMcZeChc61j0pAy2bjrg2jt4hIJQ&s" alt="Butterfly 7" class="gallery-item" data-category="butterfly">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRHRsNOp768UHVTeeZH9CsqUi5qfl6YoijVCw&s" alt="Butterfly 8" class="gallery-item" data-category="butterfly">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSSi0IQd2X_6Z21DLHzWVS9Sgk-eDvBAzNSiw&s" alt="Butterfly 9" class="gallery-item" data-category="butterfly">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRTKye0vAJ3XVcMT3Sn8Df2xZAtRQ-IXHMAqg&s" alt="Butterfly 10" class="gallery-item" data-category="butterfly">
+
+            <!-- Animals Images -->
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRyHElFQf-L2Rr-q4R3BaP5SpZQrr42mnN_aA&s" alt="Animals 1" class="gallery-item" data-category="animals">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQrMXC1OHFk0z0mgcBGojXHn4e2Tl3I4uaxhQ&s" alt="Animals 2" class="gallery-item" data-category="animals">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTg_WlnGab_VQYHBeNtxyMl2VjbGZrQ-hzliQ&s" alt="Animals 3" class="gallery-item" data-category="animals">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSams9C02sDYEJ8okHZNYVH-VEg2snpoJA9zQ&s" alt="Animals 4" class="gallery-item" data-category="animals">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQg8MZa00isQQHUmmObq6NywnVgz3bFEFeAKA&s" alt="Animals 5" class="gallery-item" data-category="animals">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTIzbYLu-_3LWy6J6Zcnv7IXork1rdrDagUhw&s" alt="Animals 6" class="gallery-item" data-category="animals">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTuq-K_-xORpCVL85X8hp4x5gzVE0YD92Y2dQ&s" alt="Animals 7" class="gallery-item" data-category="animals">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSWgrMXODUOENyEMPL1eSoNEFZslSXUpUsDLA&s" alt="Animals 8" class="gallery-item" data-category="animals">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTlC1PWVuHh6Wf5aG77-XjEQEZdiGdKkLlt7A&s" alt="Animals 9" class="gallery-item" data-category="animals">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRcK5VoNWbUHwxWAVEuGHWwNiKSJWEZb11NiQ&s" alt="Animals 10" class="gallery-item" data-category="animals">
+
+            <!-- Nature Images -->
+            <img src="https://static.vecteezy.com/system/resources/thumbnails/036/226/872/small/ai-generated-nature-landscapes-background-free-photo.jpg" alt="Nature 1" class="gallery-item" data-category="nature">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQB1KPIB1VvcHzp7D_-maPwKToRv9zLIvc44Q&s" alt="Nature 2" class="gallery-item" data-category="nature">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS2HtrA_XO6WEGfO6R7hS2PKTQKYd5wDriNCQ&s" alt="Nature 3" class="gallery-item" data-category="nature">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRINDNQB7HPhX24UYobHdkMxqsYnJrcF1mR6A&s" alt="Nature 4" class="gallery-item" data-category="nature">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRD1-_iVuMdIEuL70W9xQrL4RUimqbRz7uDzQ&s" alt="Nature 5" class="gallery-item" data-category="nature">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTvFAO85i_zS0sDQIzUnj5_0GWwTtxeWpyMnw&s" alt="Nature 6" class="gallery-item" data-category="nature">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSYAcCQTp6jMR-GP6N8-lpccALnMtVyeX6LqA&s" alt="Nature 7" class="gallery-item" data-category="nature">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR7prLiXug0dKBPSCVqXatHbvhKsKUG1a53nw&s" alt="Nature 8" class="gallery-item" data-category="nature">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTjIj3bRVuJhWCVW1jD30AjoO2eZ6-uRQNOIg&s" alt="Nature 9" class="gallery-item" data-category="nature">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcScgtgYiF_2WUWXY_JMPjwB6-VLo14vruQbAw&s" alt="Nature 10" class="gallery-item" data-category="nature">
+
+            <!-- Sky Images -->
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQhGEtXtdvUzlsc3OsqaBZHMAO4uLnBc33JeQ&s" alt="Sky 1" class="gallery-item" data-category="sky">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSfOb8-MFSqFwHcCzwaMniwaKhNx0vyw72i2Q&s" alt="Sky 2" class="gallery-item" data-category="sky">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRtfXCyvvrpY4AELtkGpDtTEgyPlNFp5WiMIw&s" alt="Sky 3" class="gallery-item" data-category="sky">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS9C3ECSuZBRs3q6WEfbkQmPTB8UnKRrZz5_w&s" alt="Sky 4" class="gallery-item" data-category="sky">
+            <img src="https://darksky.org/app/uploads/2024/05/Blogpost-Banner-Migratory-Birds.png" alt="Sky 5" class="gallery-item" data-category="sky">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQzt0jL2XjyZkJ6VKZ7xc1LuEy5puNojwZPCA&s" alt="Sky 6" class="gallery-item" data-category="sky">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRKzH9g1Zzn2CFvoVMUNJQnvxFi9h4yZs9sMA&s" alt="Sky 7" class="gallery-item" data-category="sky">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZSf3OywU4xlS9bYZLxRh2SLOoBPwaMDI5gA&s" alt="Sky 8" class="gallery-item" data-category="sky">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTJoTOoz8uX8T7U9MiEdhhyW_vzllGA0YLkSg&s" alt="Sky 9" class="gallery-item" data-category="sky">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRY7m-FXlepDenjtcAFlBApZgtuVF3Elzt-Rg&s" alt="Sky 10" class="gallery-item" data-category="sky">
+        </div>
+    </div>
+
+    <div class="lightbox" id="lightbox">
+        <span class="close-btn" id="closeBtn">&times;</span>
+        <span class="prev-btn" id="prevBtn">&#10094;</span>
+        <img id="lightboxImg">
+        <span class="next-btn" id="nextBtn">&#10095;</span>
+    </div>
+
+    <script>
+        const galleryItems = document.querySelectorAll('.gallery-item');
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = document.getElementById('lightboxImg');
+        const closeBtn = document.getElementById('closeBtn');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const menuItems = document.querySelectorAll('.sidebar ul li');
+
+        let currentIndex = 0;
+
+        // Open Lightbox
+        galleryItems.forEach((item, index) => {
+            item.addEventListener('click', () => {
+                currentIndex = index;
+                lightboxImg.src = item.src;
+                lightbox.style.display = 'flex';
+            });
+        });
+
+        // Close Lightbox
+        closeBtn.addEventListener('click', () => {
+            lightbox.style.display = 'none';
+        });
+
+        // Navigation
+        prevBtn.addEventListener('click', () => {
+            currentIndex = (currentIndex > 0) ? currentIndex - 1 : galleryItems.length - 1;
+            lightboxImg.src = galleryItems[currentIndex].src;
+        });
+
+        nextBtn.addEventListener('click', () => {
+            currentIndex = (currentIndex < galleryItems.length - 1) ? currentIndex + 1 : 0;
+            lightboxImg.src = galleryItems[currentIndex].src;
+        });
+
+        // Filtering
+        menuItems.forEach(menu => {
+            menu.addEventListener('click', () => {
+                menuItems.forEach(item => item.classList.remove('active'));
+                menu.classList.add('active');
+
+                const category = menu.getAttribute('data-category');
+
+                galleryItems.forEach(img => {
+                    if (category === 'all' || img.getAttribute('data-category') === category) {
+                        img.style.display = 'block';
+                        img.style.animation = 'fadeIn 0.5s ease-in-out forwards';
+                    } else {
+                        img.style.display = 'none';
+                    }
+                });
+            });
+        });
+    </script>
+
+</body>
+</html>
